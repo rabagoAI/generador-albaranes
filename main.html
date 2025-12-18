@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Albaranes Moderno</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div>
+                    <h1>Generador de Albaranes</h1>
+                    <p>Sistema moderno para crear y gestionar albaranes</p>
+                </div>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="albaran-tab">
+                <i class="fas fa-file-invoice"></i> Crear Albarán
+            </button>
+            <button class="tab-btn" data-tab="destinatarios-tab">
+                <i class="fas fa-users"></i> Destinatarios
+            </button>
+            <button class="tab-btn" data-tab="historial-tab">
+                <i class="fas fa-history"></i> Historial
+            </button>
+        </div>
+
+        <!-- Crear Albarán Tab -->
+        <div id="albaran-tab" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-plus-circle"></i> Nuevo Albarán</h2>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="destinatario">Destinatario *</label>
+                            <select id="destinatario" class="form-control">
+                                <option value="">Seleccionar destinatario</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group-small">
+                                    <label for="nif-destinatario">NIF Destinatario</label>
+                                    <input type="text" id="nif-destinatario" class="form-control" placeholder="NIF del destinatario">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group-small">
+                                    <label for="email-destinatario">Email Destinatario</label>
+                                    <input type="email" id="email-destinatario" class="form-control" placeholder="email@destinatario.com">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fecha">Fecha *</label>
+                            <input type="date" id="fecha" class="form-control" value="">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="numero">Número de Albarán *</label>
+                            <input type="text" id="numero" class="form-control" placeholder="Ej: ALB-2025-001">
+                        </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="cabecera">Datos de la Empresa</label>
+                            <textarea id="cabecera" class="form-control" rows="6" placeholder="Información de la empresa">Mi Empresa SL
+
+Polígono Industrial Las Mercedes, Nave 4
+NIF: A87654321
+Tel: 912344556 | facturacion@miempresa.com</textarea>
+                        </div>
+                        
+                        <div class="row" style="display: none;">
+                            <div class="col">
+                                <div class="form-group-small">
+                                    <label for="iva">IVA (%)</label>
+                                    <input type="number" id="iva" class="form-control" value="0" min="0" max="100" step="0.1">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group-small">
+                                    <label for="precio-base">Precio Base (€/kg)</label>
+                                    <input type="number" id="precio-base" class="form-control" value="0" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Productos</label>
+                    <div class="row">
+                        <div class="col">
+                            <input type="text" id="producto-nombre" class="form-control" placeholder="Nombre del producto">
+                        </div>
+                        <div class="col">
+                            <input type="number" id="producto-peso" class="form-control" placeholder="Peso neto (kg)" step="0.01">
+                        </div>
+                        <div class="col">
+                            <input type="text" id="producto-lote" class="form-control" placeholder="Número de lote">
+                        </div>
+                        <div class="col">
+                            <input type="number" id="producto-cantidad" class="form-control" placeholder="Cantidad" value="1" min="1">
+                        </div>
+                        <div class="col">
+                            <button id="agregar-producto" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Peso Neto (kg)</th>
+                            <th>Lote</th>
+                            <th>Cantidad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos-lista">
+                        <!-- Los productos se agregarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+                
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button id="generar-pdf" class="btn btn-success"><i class="fas fa-file-pdf"></i> Generar PDF</button>
+                    <button id="limpiar-formulario" class="btn btn-secondary"><i class="fas fa-broom"></i> Limpiar Formulario</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Destinatarios Tab -->
+        <div id="destinatarios-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-address-book"></i> Gestión de Destinatarios</h2>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="nuevo-nombre">Nombre *</label>
+                            <input type="text" id="nuevo-nombre" class="form-control" placeholder="Nombre del destinatario">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nuevo-direccion">Dirección *</label>
+                            <input type="text" id="nuevo-direccion" class="form-control" placeholder="Dirección completa">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nuevo-ciudad">Ciudad *</label>
+                            <input type="text" id="nuevo-ciudad" class="form-control" placeholder="Ciudad">
+                        </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="nuevo-cp">Código Postal</label>
+                            <input type="text" id="nuevo-cp" class="form-control" placeholder="Código Postal">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nuevo-nif">NIF</label>
+                            <input type="text" id="nuevo-nif" class="form-control" placeholder="NIF del destinatario">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nuevo-telefono">Teléfono</label>
+                            <input type="text" id="nuevo-telefono" class="form-control" placeholder="Teléfono de contacto">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nuevo-email">Email</label>
+                            <input type="email" id="nuevo-email" class="form-control" placeholder="Email de contacto">
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <button id="agregar-destinatario" class="btn btn-primary"><i class="fas fa-user-plus"></i> Agregar Destinatario</button>
+                    <button id="importar-excel" class="btn btn-secondary"><i class="fas fa-file-excel"></i> Importar desde Excel</button>
+                </div>
+                
+                <div class="recipients-list" id="lista-destinatarios">
+                    <!-- Los destinatarios se cargarán aquí -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial Tab -->
+        <div id="historial-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-archive"></i> Historial de Albaranes</h2>
+                    <button id="limpiar-historial" class="btn btn-danger"><i class="fas fa-trash"></i> Limpiar Historial</button>
+                </div>
+                
+                <!-- Filtro de búsqueda -->
+                <div class="search-filter">
+                    <input type="text" id="filtro-cliente" class="form-control" placeholder="Buscar por cliente o producto...">
+                    <button id="aplicar-filtro" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
+                    <button id="limpiar-filtro" class="btn btn-secondary clear-filter"><i class="fas fa-times"></i> Limpiar</button>
+                </div>
+                
+                <div class="history-list" id="lista-historial">
+                    <!-- El historial se cargará aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Generador de Albaranes Moderno &copy; 2025 - Desarrollado para reemplazar el archivo Excel antiguo</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
