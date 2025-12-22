@@ -58,6 +58,7 @@ const aplicarFiltroBtn = document.getElementById('aplicar-filtro');
 const limpiarFiltroBtn = document.getElementById('limpiar-filtro');
 const nifDestinatarioInput = document.getElementById('nif-destinatario');
 const emailDestinatarioInput = document.getElementById('email-destinatario');
+const datosEmpresaInput = document.getElementById('cabecera')
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', function() {
@@ -156,7 +157,7 @@ function cargarLogoEmpresa() {
 }
 
 // Función para crear un logo por defecto
-function crearLogoPorDefecto() {
+/*function crearLogoPorDefecto() {
     const canvas = document.createElement('canvas');
     canvas.width = 200;
     canvas.height = 100;
@@ -171,10 +172,10 @@ function crearLogoPorDefecto() {
     ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('MI EMPRESA', 100, 50);
+    ctx.fillText('CATALYSIS', 100, 50);
     
     logoBase64 = canvas.toDataURL('image/png');
-}
+}*/
 
 // Cambiar modo oscuro/claro
 themeToggle.addEventListener('click', function() {
@@ -535,16 +536,13 @@ generarPdfBtn.addEventListener('click', function() {
         return;
     }
     
-    const cabecera = document.getElementById('cabecera').value;
-    
-    // Crear el PDF con el nuevo formato
     generarPDF({
         numero: numeroInput.value.trim(),
         fecha: fechaInput.value,
         destinatario: destinatario,
         nifDestinatario: nifDestinatarioInput.value.trim(),
         emailDestinatario: emailDestinatarioInput.value.trim(),
-        cabecera: cabecera,
+        cabecera: datosEmpresaInput.value, // Aquí también
         productos: productos
     });
     
@@ -566,6 +564,9 @@ generarPdfBtn.addEventListener('click', function() {
 // ============================================
 // NUEVA FUNCIÓN PARA GENERAR PDF COMO LA IMAGEN
 // ============================================
+// ============================================
+// NUEVA FUNCIÓN PARA GENERAR PDF MODERNO
+// ============================================
 function generarPDF(datos) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -577,80 +578,91 @@ function generarPDF(datos) {
     const usableWidth = pageWidth - marginLeft - marginRight;
     let currentY = 15;
     
-    // ========== CABECERA ==========
+    // Color azul moderno
+    const colorAzul = [67, 97, 238]; // RGB del azul
+    const colorAzulOscuro = [52, 73, 194];
+    
+    // ========== CABECERA CON FONDO AZUL ==========
+    // Fondo azul
+    doc.setFillColor(...colorAzul);
+    doc.rect(0, 0, pageWidth, 50, 'F');
+    
     // Logo de la empresa a la izquierda
     if (logoBase64) {
         try {
-            doc.addImage(logoBase64, 'PNG', marginLeft, currentY, 40, 25);
+            doc.addImage(logoBase64, 'PNG', marginLeft, 8, 30, 22);
         } catch (error) {
             console.log("Error al agregar logo");
-            doc.setFillColor(240, 240, 240);
-            doc.rect(marginLeft, currentY, 40, 25, 'F');
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text("LOGO", marginLeft + 20, currentY + 12, { align: "center" });
         }
     }
     
-    // Nombre de la empresa
-    doc.setFontSize(18);
+    // Datos de la empresa del usuario (dividir por saltos de línea)
+    const lineasEmpresa = datos.cabecera.split('\n').filter(linea => linea.trim() !== '');
+    
+    // Primera línea: nombre de la empresa (negrita, más grande)
+    if (lineasEmpresa.length > 0) {
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+        doc.text(lineasEmpresa[0].trim(), marginLeft + 35, 18);
+    }
+    
+    // Resto de líneas: información de la empresa (normal)
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(255, 255, 255);
+    let yEmpresa = 27;
+    for (let i = 1; i < lineasEmpresa.length; i++) {
+        doc.text(lineasEmpresa[i].trim(), marginLeft + 35, yEmpresa);
+        yEmpresa += 4;
+    }
+    
+    currentY = 60;
+    
+    // ========== TÍTULO "ALBARÁN" ==========
+    doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(50, 50, 50);
-    doc.text("Mi Empresa SL", marginLeft + 50, currentY + 8);
+    doc.setTextColor(...colorAzulOscuro);
+    doc.text("ALBARÁN", marginLeft, currentY);
     
     currentY += 15;
     
-    // Información de la empresa
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    
-    const infoEmpresa = [
-        "Polígono Industrial Las Mercedes, Nave 4",
-        "NIF: A87554321",
-        "Tel: 91234556 | facturacion@miempresa.com"
-    ];
-    
-    infoEmpresa.forEach((linea, index) => {
-        doc.text(linea, marginLeft + 50, currentY + (index * 5));
-    });
-    
-    currentY += 25;
-    
-    // ========== SEPARADOR LÍNEA SIMPLE ==========
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
+    // ========== SECCIÓN DESTINATARIO CON RECUADRO AZUL ==========
+    // Línea azul divisoria
+    doc.setDrawColor(...colorAzul);
+    doc.setLineWidth(1);
     doc.line(marginLeft, currentY, pageWidth - marginRight, currentY);
     
     currentY += 10;
     
-    // ========== SECCIÓN DESTINATARIO ==========
-    doc.setFontSize(14);
+    // Título destinatario con fondo azul claro
+    doc.setFillColor(240, 245, 255);
+    doc.rect(marginLeft, currentY, usableWidth, 8, 'F');
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.text("DESTINATARIO", marginLeft, currentY);
+    doc.setTextColor(...colorAzul);
+    doc.text("DESTINATARIO", marginLeft + 3, currentY + 5.5);
     
-    currentY += 10;
+    currentY += 12;
     
-    // Nombre del destinatario (negrita)
+    // Nombre del destinatario (negrita y azul)
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(...colorAzulOscuro);
     doc.text(datos.destinatario.nombre, marginLeft, currentY);
     
     currentY += 7;
     
-    // Información del destinatario
-    doc.setFontSize(11);
+    // Información del destinatario (gris oscuro)
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(80, 80, 80);
     
-    // Dirección
     if (datos.destinatario.direccion) {
         doc.text(datos.destinatario.direccion, marginLeft, currentY);
         currentY += 5;
     }
     
-    // Ciudad
     if (datos.destinatario.ciudad) {
         const ciudadText = datos.destinatario.cp 
             ? `${datos.destinatario.ciudad} (${datos.destinatario.cp})`
@@ -659,19 +671,18 @@ function generarPDF(datos) {
         currentY += 5;
     }
     
-    // NIF
     if (datos.nifDestinatario) {
+        doc.setTextColor(...colorAzul);
         doc.text(`NIF: ${datos.nifDestinatario}`, marginLeft, currentY);
         currentY += 5;
+        doc.setTextColor(80, 80, 80);
     }
     
-    // Teléfono
     if (datos.destinatario.telefono) {
         doc.text(`Tel: ${datos.destinatario.telefono}`, marginLeft, currentY);
         currentY += 5;
     }
     
-    // Email
     if (datos.emailDestinatario) {
         doc.text(`Email: ${datos.emailDestinatario}`, marginLeft, currentY);
         currentY += 5;
@@ -679,30 +690,22 @@ function generarPDF(datos) {
     
     currentY += 5;
     
-    // ========== SEPARADOR LÍNEA SIMPLE ==========
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(marginLeft, currentY, pageWidth - marginRight, currentY);
-    
-    currentY += 10;
-    
-    // ========== TABLA DE PRODUCTOS ==========
-    // Configurar columnas
+    // ========== TABLA DE PRODUCTOS CON ESTILO MODERNO ==========
     const colWidths = [usableWidth * 0.4, usableWidth * 0.2, usableWidth * 0.2, usableWidth * 0.2];
     let colX = marginLeft;
     
-    // Cabecera de la tabla
-    doc.setFillColor(240, 240, 240);
+    // Cabecera de la tabla con fondo azul
+    doc.setFillColor(...colorAzul);
     doc.rect(marginLeft, currentY, usableWidth, 10, 'F');
     
     // Bordes de la cabecera
-    doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.3);
+    doc.setDrawColor(67, 97, 238);
+    doc.setLineWidth(0.5);
     doc.rect(marginLeft, currentY, usableWidth, 10);
     
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(255, 255, 255); // Texto blanco en cabecera azul
     
     // Texto de cabecera
     const columnas = ["Producto", "Peso Neto", "Lote", "Cant."];
@@ -722,47 +725,42 @@ function generarPDF(datos) {
     // ========== FILAS DE PRODUCTOS ==========
     doc.setFont("helvetica", "normal");
     datos.productos.forEach((prod, index) => {
-        // Altura de la fila
         const rowHeight = 12;
         
-        // Fondo alternado para filas
+        // Fondo alternado para filas (blanco y azul muy claro)
         if (index % 2 === 0) {
             doc.setFillColor(255, 255, 255);
         } else {
-            doc.setFillColor(250, 250, 250);
+            doc.setFillColor(245, 250, 255);
         }
         
         doc.rect(marginLeft, currentY, usableWidth, rowHeight, 'F');
         
-        // Bordes de la fila
-        doc.setDrawColor(200, 200, 200);
+        // Bordes de la fila (azul claro)
+        doc.setDrawColor(220, 230, 255);
         doc.rect(marginLeft, currentY, usableWidth, rowHeight);
         
-        // Resetear posición X
         colX = marginLeft;
         
-        // Producto (columna 1)
-        doc.setFontSize(11);
+        // Producto
+        doc.setFontSize(10);
         doc.setTextColor(40, 40, 40);
         doc.text(prod.nombre, colX + 5, currentY + 8);
         
-        // Separador vertical
         doc.line(colX + colWidths[0], currentY, colX + colWidths[0], currentY + rowHeight);
         
-        // Peso Neto (columna 2)
+        // Peso Neto
         doc.text(`${prod.peso.toFixed(0)}`, colX + colWidths[0] + (colWidths[1] / 2), currentY + 8, { align: "center" });
         
-        // Separador vertical
         doc.line(colX + colWidths[0] + colWidths[1], currentY, colX + colWidths[0] + colWidths[1], currentY + rowHeight);
         
-        // Lote (columna 3)
+        // Lote
         doc.text(prod.lote, colX + colWidths[0] + colWidths[1] + (colWidths[2] / 2), currentY + 8, { align: "center" });
         
-        // Separador vertical
         doc.line(colX + colWidths[0] + colWidths[1] + colWidths[2], currentY, 
                  colX + colWidths[0] + colWidths[1] + colWidths[2], currentY + rowHeight);
         
-        // Cantidad (columna 4)
+        // Cantidad
         doc.text(prod.cantidad.toString(), colX + colWidths[0] + colWidths[1] + colWidths[2] + (colWidths[3] / 2), currentY + 8, { align: "center" });
         
         currentY += rowHeight;
@@ -770,18 +768,18 @@ function generarPDF(datos) {
     
     currentY += 15;
     
-    // ========== INFORMACIÓN DEL ALBARÁN ==========
-    // Fondo gris para la información
-    doc.setFillColor(245, 245, 245);
+    // ========== INFORMACIÓN DEL ALBARÁN CON FONDO AZUL ==========
+    doc.setFillColor(240, 245, 255);
     doc.rect(marginLeft, currentY, usableWidth, 15, 'F');
     
-    // Borde
-    doc.setDrawColor(220, 220, 220);
+    // Borde azul
+    doc.setDrawColor(...colorAzul);
+    doc.setLineWidth(1);
     doc.rect(marginLeft, currentY, usableWidth, 15);
     
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(...colorAzul);
     
     // Número de albarán
     doc.text(`Albarán Nº: ${datos.numero}`, marginLeft + 10, currentY + 10);
@@ -799,6 +797,12 @@ function generarPDF(datos) {
     const pageCount = doc.internal.getNumberOfPages();
     for(let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
+        
+        // Línea azul antes del pie
+        doc.setDrawColor(...colorAzul);
+        doc.setLineWidth(1);
+        doc.line(marginLeft, 285, pageWidth - marginRight, 285);
+        
         doc.setFontSize(9);
         doc.setFont("helvetica", "italic");
         doc.setTextColor(150, 150, 150);
@@ -808,7 +812,6 @@ function generarPDF(datos) {
     // Guardar PDF
     doc.save(`albaran-${datos.numero}.pdf`);
 }
-
 // Limpiar formulario
 limpiarFormularioBtn.addEventListener('click', function() {
     if (confirm('¿Estás seguro de que quieres limpiar el formulario? Se perderán todos los datos no guardados.')) {
@@ -857,7 +860,6 @@ window.eliminarDelHistorial = function(id) {
     }
 };
 
-// Descargar albarán del historial
 window.descargarAlbaranHistorial = function(id) {
     const albaran = historial.find(h => h.id === id);
     if (albaran) {
@@ -877,7 +879,7 @@ window.descargarAlbaranHistorial = function(id) {
             destinatario: destinatario,
             nifDestinatario: destinatario.nif || "",
             emailDestinatario: destinatario.email || "",
-            cabecera: "Mi Empresa SL\n\nPolígono Industrial Las Mercedes, Nave 4\nNIF: A87554321\nTel: 91234556 | facturacion@miempresa.com",
+            cabecera: datosEmpresaInput.value, // Aquí captura lo del textarea
             productos: albaran.productos
         });
     }
